@@ -41,6 +41,35 @@ Run the tests with `python tests/test_tracker.py` (or `pytest tests/`).
 
 ---
 
+## Run it continuously (Docker)
+
+The agent is long-running — the FOMC calendar and crypto-index pollers stay
+scheduled inside it, and the YouTube/websocket sources stream live — so the
+intended deployment is a single always-on container.
+
+```bash
+cp .env.example .env            # fill in your tokens / channels
+docker compose up -d --build    # start in the background
+docker compose logs -f tracker  # watch alerts stream in real time
+```
+
+- `restart: unless-stopped` keeps it alive across crashes and reboots.
+- It handles `SIGTERM`/`SIGINT`, so `docker compose stop` shuts down cleanly.
+- A heartbeat line is logged every 5 min so you can confirm it's alive.
+- One-off smoke test in the image: `docker compose run --rm tracker --demo`.
+
+No Docker? Run it under any process supervisor instead:
+
+```bash
+# systemd / supervisord / pm2 / nohup — all work; it just needs to stay up:
+python run_tracker.py --live
+```
+
+The image installs the optional live connectors (`youtube-transcript-api`,
+`websockets`) so live mode is fully functional in the container.
+
+---
+
 ## How it works
 
 ```

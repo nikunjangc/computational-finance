@@ -17,6 +17,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import logging
+import signal
 
 from .agent import Agent, build_default_sources
 from .config import Config
@@ -60,7 +61,19 @@ async def cmd_live() -> None:
     dispatcher = Dispatcher(build_notifiers(cfg, include_console=True))
     sources = build_default_sources(cfg)
     agent = Agent(sources=sources, engine=engine, dispatcher=dispatcher)
-    await agent.run()
+
+    # Graceful shutdown on SIGTERM/SIGINT (e.g. `docker stop`).
+    loop = asyncio.get_running_loop()
+    runner = asyncio.ensure_future(agent.run(heartbeat_seconds=300))
+    for sig in (signal.SIGTERM, signal.SIGINT):
+        try:
+            loop.add_signal_handler(sig, runner.cancel)
+        except (NotImplementedError, ValueError):
+            pass  # not supported on this platform (e.g. Windows)
+    try:
+        await runner
+    except asyncio.CancelledError:
+        pass
 
 
 def main(argv=None) -> None:

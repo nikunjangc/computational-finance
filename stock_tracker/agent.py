@@ -74,14 +74,23 @@ class Agent:
         except Exception as exc:
             log.exception("source %s crashed: %s", getattr(source, "name", source), exc)
 
-    async def run(self) -> None:
+    async def _heartbeat(self, seconds: int):
+        while True:
+            await asyncio.sleep(seconds)
+            log.info("heartbeat: alive | processed=%d alerts=%d", self.processed, self.alerts)
+
+    async def run(self, heartbeat_seconds: int = 0) -> None:
         if not self.sources:
             log.warning("no sources configured; nothing to do")
             return
         log.info("agent starting with %d source(s)", len(self.sources))
         tasks = [asyncio.create_task(self._run_source(s)) for s in self.sources]
+        if heartbeat_seconds > 0:
+            tasks.append(asyncio.create_task(self._heartbeat(heartbeat_seconds)))
         try:
             await asyncio.gather(*tasks)
+        except asyncio.CancelledError:
+            log.info("agent cancelled; shutting down")
         finally:
             for t in tasks:
                 t.cancel()

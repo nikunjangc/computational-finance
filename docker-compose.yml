@@ -1,0 +1,31 @@
+# Run the live agentic tracker continuously.
+#
+#   cp .env.example .env   # fill in your tokens / channels
+#   docker compose up -d --build
+#   docker compose logs -f tracker
+#
+# The agent is long-running: scheduled sources (FOMC calendar, crypto index)
+# and live sources (YouTube captions, websocket feed) run forever inside it,
+# so `restart: unless-stopped` keeps it alive across crashes / reboots.
+
+services:
+  tracker:
+    build: .
+    image: stock-tracker:latest
+    container_name: stock-tracker
+    env_file:
+      - .env
+    restart: unless-stopped
+    # Override the command for other modes, e.g.:
+    #   docker compose run --rm tracker --demo
+    command: ["--live"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import stock_tracker"]
+      interval: 1m
+      timeout: 10s
+      retries: 3
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
