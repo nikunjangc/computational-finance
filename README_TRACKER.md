@@ -203,6 +203,33 @@ How it stays around a dollar a month:
 If `anthropic` isn't installed, no key is set, or `LLM_ENABLED=false`, the
 classifier disables itself and everything runs free.
 
+## Optional: auto-post to social (Facebook Page)
+
+When a **strong** signal fires, the agent can generate a post and publish it to
+your Facebook Page automatically. Copy comes from the LLM when budget is
+available, otherwise a free template; an optional branded image card is attached.
+
+```env
+PUBLISH_ENABLED=true
+PUBLISH_DRY_RUN=true            # leave true to preview; set false to actually post
+PUBLISH_MIN_CONFIDENCE=0.7      # only post strong signals
+POST_IMAGE=true                 # branded card (needs Pillow); text-only otherwise
+FB_PAGE_ID=...
+FB_PAGE_ACCESS_TOKEN=...        # long-lived Page token with pages_manage_posts
+```
+
+- **Dry-run by default.** With `PUBLISH_DRY_RUN=true` (or no FB token) it prints
+  exactly what it *would* post — flip to `false` only when you're ready to go live.
+- **Gated** by `PUBLISH_MIN_CONFIDENCE` so only high-confidence events post, and
+  by the same dedup/leader logic as alerts (no double-posting across instances).
+- **Pluggable:** add platforms by subclassing
+  [`publish.base.Publisher`](stock_tracker/publish/base.py) — Instagram, X, etc.
+  follow the same shape. (TikTok/Reels need video, a separate build.)
+
+> ⚠️ Auto-posting financial content carries platform-ToS and "is this advice?"
+> exposure. A disclaimer is appended to every post; consider `PUBLISH_DRY_RUN`
+> or a review step for anything sensitive.
+
 ## Extending it
 
 - **Add a sector / stock** → edit `sectors.yaml`. No code changes.

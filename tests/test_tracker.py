@@ -213,6 +213,93 @@ def test_engine_uses_llm_when_candidate_present():
     assert any(s.sector_key == "crypto_digital_assets" and s.direction == Direction.BEARISH for s in signals)
 
 
+# ----------------------- content + social publishing ------------------
+
+from stock_tracker.content.generator import ContentGenerator, Post
+from stock_tracker.publish.console import ConsolePublisher
+from stock_tracker.publish.facebook import FacebookPagePublisher
+from stock_tracker.publish.dispatcher import SocialPublisher
+
+
+def _make_signal(confidence=0.9, direction=Direction.BULLISH):
+    u = Utterance(text="We will lead in quantum computing", source="cli", speaker="Trump")
+    return Signal(
+        utterance=u, sector="Quantum Computing", sector_key="quantum_computing",
+        matched_keywords=["quantum"], direction=direction, confidence=confidence,
+        tickers=[TickerHit("IONQ", "IonQ", "Quantum Computing")], rationale="x",
+    )
+
+
+def test_post_full_text_has_caption_tags_disclaimer():
+    p = Post(caption="Hello", hashtags=["stocks", "ionq"], disclaimer="NFA")
+    txt = p.full_text()
+    assert "Hello" in txt and "#stocks" in txt and "#ionq" in txt and "NFA" in txt
+
+
+def test_content_template_fallback_no_llm():
+    gen = ContentGenerator()  # no api key -> free template
+    post = gen.generate(_make_signal())
+    assert "Quantum Computing" in post.caption
+    assert "$IONQ" in post.caption
+    assert post.hashtags
+
+
+def test_content_uses_llm_when_available():
+    t = _tracker(budget=1.0)
+    fake = _FakeClient('{"caption":"Big quantum news","hashtags":["quantum","ionq"]}')
+    gen = ContentGenerator(api_key="k", tracker=t, client=fake)
+    post = gen.generate(_make_signal())
+    assert post.caption == "Big quantum news"
+    assert t.spent() > 0
+
+
+def test_console_publisher_ok():
+    pub = ConsolePublisher()
+    assert pub.publish(_make_signal(), Post("c"), None) is True
+
+
+def test_facebook_feed_post_payload():
+    calls = {}
+
+    def fake_post(url, data=None, files=None):
+        calls["url"] = url
+        calls["data"] = data
+        return types.SimpleNamespace(status_code=200, text="{}")
+
+    pub = FacebookPagePublisher("PAGE", "TOKEN", http_post=fake_post)
+    ok = pub.publish(_make_signal(), Post("hello", ["stocks"]), None)
+    assert ok is True
+    assert calls["url"].endswith("/PAGE/feed")
+    assert calls["data"]["access_token"] == "TOKEN"
+    assert "hello" in calls["data"]["message"]
+
+
+def test_facebook_failure_returns_false():
+    def fake_post(url, data=None, files=None):
+        return types.SimpleNamespace(status_code=400, text="bad token")
+
+    pub = FacebookPagePublisher("PAGE", "TOKEN", http_post=fake_post)
+    assert pub.publish(_make_signal(), Post("hi"), None) is False
+
+
+class _CountingPublisher(ConsolePublisher):
+    def __init__(self):
+        self.count = 0
+
+    def publish(self, signal, post, image_path):
+        self.count += 1
+        return True
+
+
+def test_social_publisher_gates_on_confidence():
+    counter = _CountingPublisher()
+    sp = SocialPublisher(ContentGenerator(), [counter], min_confidence=0.7, with_image=False)
+    assert sp.publish(_make_signal(confidence=0.5)) is False  # below threshold
+    assert counter.count == 0
+    assert sp.publish(_make_signal(confidence=0.9)) is True   # strong signal
+    assert counter.count == 1
+
+
 if __name__ == "__main__":
     # Allow running without pytest installed.
     fns = [v for k, v in sorted(globals().items()) if k.startswith("test_")]

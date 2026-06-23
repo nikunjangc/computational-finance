@@ -32,12 +32,14 @@ class Agent:
         engine: Optional[SignalEngine] = None,
         dispatcher: Optional[Dispatcher] = None,
         coordinator: Optional[Coordinator] = None,
+        publisher=None,
         dedup_seconds: int = 600,
     ):
         self.sources = sources
         self.engine = engine or SignalEngine()
         self.dispatcher = dispatcher or Dispatcher(build_notifiers(Config.from_env()))
         self.coordinator = coordinator
+        self.publisher = publisher  # optional SocialPublisher
         self.dedup_seconds = dedup_seconds
         self._recent: dict[str, float] = {}
         self.processed = 0
@@ -71,6 +73,12 @@ class Agent:
             self.dispatcher.dispatch(signal)
             self.alerts += 1
             fired.append(signal)
+            # Auto-post strong signals to social (gated inside the publisher).
+            if self.publisher is not None:
+                try:
+                    self.publisher.publish(signal)
+                except Exception as exc:
+                    log.warning("publisher raised: %s", exc)
         return fired
 
     # ------------------------------------------------------------------

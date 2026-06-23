@@ -61,15 +61,18 @@ async def cmd_live() -> None:
     from .knowledge_base import KnowledgeBase
     from .nlp.llm_classifier import build_classifier
 
+    from .publish.dispatcher import build_publisher
+
     kb = KnowledgeBase.load()
     engine = SignalEngine(kb=kb, min_confidence=cfg.min_confidence, llm=build_classifier(cfg, kb))
+    publisher = build_publisher(cfg)
     dispatcher = Dispatcher(build_notifiers(cfg, include_console=True))
     sources = build_default_sources(cfg)
     coordinator = build_coordinator(cfg)
     logging.getLogger("stock_tracker").info(
         "instance=%s role=%s (redis=%s)", coordinator.instance_id, coordinator.role(), bool(cfg.redis_url)
     )
-    agent = Agent(sources=sources, engine=engine, dispatcher=dispatcher, coordinator=coordinator)
+    agent = Agent(sources=sources, engine=engine, dispatcher=dispatcher, coordinator=coordinator, publisher=publisher)
 
     # Graceful shutdown on SIGTERM/SIGINT (e.g. `docker stop`).
     loop = asyncio.get_running_loop()

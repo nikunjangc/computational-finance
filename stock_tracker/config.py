@@ -50,6 +50,15 @@ class Config:
     llm_monthly_budget: float = 1.0          # USD; falls back to free mode when hit
     llm_state_path: str = ".stock_tracker_llm_spend.json"
 
+    # --- social auto-posting ---
+    publish_enabled: bool = False
+    publish_dry_run: bool = True             # safety: preview unless explicitly off
+    publish_min_confidence: float = 0.7      # only post strong signals
+    post_image: bool = True
+    post_disclaimer: str = "Educational only — not financial advice. Do your own research."
+    fb_page_id: Optional[str] = None
+    fb_page_token: Optional[str] = None
+
     # --- multi-instance coordination (primary + failover) ---
     instance_id: Optional[str] = None
     tracker_role: str = "primary"          # primary | standby (role-based mode)
@@ -87,4 +96,11 @@ class Config:
             llm_model=env("LLM_MODEL", "claude-haiku-4-5"),
             llm_monthly_budget=float(env("LLM_MONTHLY_BUDGET_USD", "1.0")),
             llm_state_path=env("LLM_STATE_PATH", ".stock_tracker_llm_spend.json"),
+            publish_enabled=env("PUBLISH_ENABLED", "false").lower() in ("1", "true", "yes"),
+            publish_dry_run=env("PUBLISH_DRY_RUN", "true").lower() in ("1", "true", "yes"),
+            publish_min_confidence=float(env("PUBLISH_MIN_CONFIDENCE", "0.7")),
+            post_image=env("POST_IMAGE", "true").lower() in ("1", "true", "yes"),
+            post_disclaimer=env("POST_DISCLAIMER", "Educational only — not financial advice. Do your own research."),
+            fb_page_id=env("FB_PAGE_ID"),
+            fb_page_token=env("FB_PAGE_ACCESS_TOKEN"),
         )
