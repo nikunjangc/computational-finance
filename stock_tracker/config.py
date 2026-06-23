@@ -1,0 +1,66 @@
+"""Configuration, loaded from environment variables (12-factor style).
+
+Nothing here is secret in the repo – real secrets live in the environment
+(or a local ``.env`` that is git-ignored). Copy ``.env.example`` to ``.env``
+and fill in the values you have; missing ones simply disable that connector.
+"""
+
+from __future__ import annotations
+
+import os
+from dataclasses import dataclass, field
+from typing import List, Optional
+
+
+def _split(val: Optional[str]) -> List[str]:
+    if not val:
+        return []
+    return [v.strip() for v in val.replace("\n", ",").split(",") if v.strip()]
+
+
+@dataclass
+class Config:
+    # --- notifications ---
+    telegram_bot_token: Optional[str] = None
+    telegram_chat_id: Optional[str] = None
+
+    whatsapp_provider: str = "twilio"          # twilio | meta
+    twilio_account_sid: Optional[str] = None
+    twilio_auth_token: Optional[str] = None
+    twilio_from: Optional[str] = None          # e.g. "whatsapp:+14155238886"
+    whatsapp_to: Optional[str] = None          # e.g. "whatsapp:+1..."
+    meta_wa_token: Optional[str] = None
+    meta_wa_phone_id: Optional[str] = None
+
+    # --- sources ---
+    youtube_channels: List[str] = field(default_factory=list)   # video/live IDs or URLs
+    youtube_api_key: Optional[str] = None
+    crypto_symbols: List[str] = field(default_factory=lambda: ["bitcoin", "ethereum"])
+    crypto_move_pct: float = 3.0                # alert when |24h move| exceeds this
+    websocket_urls: List[str] = field(default_factory=list)
+
+    # --- engine ---
+    min_confidence: float = 0.45
+    poll_seconds: int = 20
+
+    @classmethod
+    def from_env(cls) -> "Config":
+        env = os.environ.get
+        return cls(
+            telegram_bot_token=env("TELEGRAM_BOT_TOKEN"),
+            telegram_chat_id=env("TELEGRAM_CHAT_ID"),
+            whatsapp_provider=env("WHATSAPP_PROVIDER", "twilio"),
+            twilio_account_sid=env("TWILIO_ACCOUNT_SID"),
+            twilio_auth_token=env("TWILIO_AUTH_TOKEN"),
+            twilio_from=env("TWILIO_WHATSAPP_FROM"),
+            whatsapp_to=env("WHATSAPP_TO"),
+            meta_wa_token=env("META_WA_TOKEN"),
+            meta_wa_phone_id=env("META_WA_PHONE_ID"),
+            youtube_channels=_split(env("YOUTUBE_CHANNELS")),
+            youtube_api_key=env("YOUTUBE_API_KEY"),
+            crypto_symbols=_split(env("CRYPTO_SYMBOLS")) or ["bitcoin", "ethereum"],
+            crypto_move_pct=float(env("CRYPTO_MOVE_PCT", "3.0")),
+            websocket_urls=_split(env("WEBSOCKET_URLS")),
+            min_confidence=float(env("MIN_CONFIDENCE", "0.45")),
+            poll_seconds=int(env("POLL_SECONDS", "20")),
+        )

@@ -1,0 +1,11 @@
+# Core (required) — the offline demo and the engine run on just these.
+PyYAML>=6.0
+requests>=2.28
+
+# Live connectors (optional) — install the ones you actually use.
+youtube-transcript-api>=0.6     # YouTube live-caption / transcript source
+websockets>=11.0                # generic "open socket" push feed source
+
+# Notes:
+#  * Telegram & WhatsApp notifiers use `requests` only (no SDK needed).
+#  * Twilio WhatsApp works with plain HTTP; the `twilio` SDK is NOT required.
