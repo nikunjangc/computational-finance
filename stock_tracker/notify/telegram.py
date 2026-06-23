@@ -16,6 +16,19 @@ from .base import Notifier, format_alert
 log = logging.getLogger("stock_tracker.notify.telegram")
 
 
+def send_telegram_message(bot_token: str, chat_id: str, text: str) -> bool:
+    """Send a plain text message to Telegram (used for post confirmations)."""
+    import requests
+
+    url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+    try:
+        resp = requests.post(url, json={"chat_id": chat_id, "text": text}, timeout=15)
+        return resp.status_code == 200
+    except Exception as exc:
+        log.warning("telegram message error: %s", exc)
+        return False
+
+
 class TelegramNotifier(Notifier):
     name = "telegram"
 

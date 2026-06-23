@@ -18,6 +18,8 @@ from .base import Publisher
 from .console import ConsolePublisher
 from .facebook import FacebookPagePublisher
 from .instagram import InstagramPublisher
+from .linkedin import LinkedInPublisher
+from .twitter import TwitterPublisher
 
 log = logging.getLogger("stock_tracker.publish")
 
@@ -31,6 +33,7 @@ class SocialPublisher:
         with_image: bool = True,
         image_output_dir: Optional[str] = None,
         image_public_base: Optional[str] = None,
+        confirm=None,
     ):
         self.generator = generator
         self.publishers = publishers
@@ -38,6 +41,7 @@ class SocialPublisher:
         self.with_image = with_image
         self.image_output_dir = image_output_dir
         self.image_public_base = image_public_base
+        self.confirm = confirm  # optional callable(signal, post, platforms: list[str])
         self.posted = 0
 
     def publish(self, signal: Signal) -> bool:
@@ -50,16 +54,21 @@ class SocialPublisher:
         image_url = None
         if image and self.image_public_base:
             image_url = self.image_public_base.rstrip("/") + "/" + os.path.basename(image)
-        ok_any = False
+        succeeded: List[str] = []
         for pub in self.publishers:
             try:
                 if pub.publish(signal, post, image, image_url):
-                    ok_any = True
+                    succeeded.append(pub.name)
             except Exception as exc:
                 log.warning("publisher %s raised: %s", pub.name, exc)
-        if ok_any:
+        if succeeded:
             self.posted += 1
-        return ok_any
+            if self.confirm is not None:
+                try:
+                    self.confirm(signal, post, succeeded)
+                except Exception as exc:
+                    log.warning("post confirmation failed: %s", exc)
+        return bool(succeeded)
 
 
 def build_publisher(cfg) -> Optional[SocialPublisher]:
@@ -90,11 +99,25 @@ def build_publisher(cfg) -> Optional[SocialPublisher]:
             log.info("instagram publisher LIVE (user %s)", cfg.ig_user_id)
             if not cfg.image_public_base:
                 log.warning("instagram is live but IMAGE_PUBLIC_BASE_URL is unset — IG image posts will be skipped")
+        if all([cfg.x_api_key, cfg.x_api_secret, cfg.x_access_token, cfg.x_access_secret]):
+            publishers.append(TwitterPublisher(cfg.x_api_key, cfg.x_api_secret, cfg.x_access_token, cfg.x_access_secret))
+            log.info("x/twitter publisher LIVE")
+        if cfg.linkedin_access_token and cfg.linkedin_author_urn:
+            publishers.append(LinkedInPublisher(cfg.linkedin_author_urn, cfg.linkedin_access_token))
+            log.info("linkedin publisher LIVE (%s)", cfg.linkedin_author_urn)
 
     if not publishers:
         publishers.append(ConsolePublisher())
-        reason = "PUBLISH_DRY_RUN=true" if cfg.publish_dry_run else "no FB/IG credentials"
+        reason = "PUBLISH_DRY_RUN=true" if cfg.publish_dry_run else "no platform credentials"
         log.info("social publishing in DRY-RUN (%s)", reason)
+
+    # Telegram confirmation when posts actually go live.
+    confirm = None
+    if not cfg.publish_dry_run and cfg.telegram_bot_token and cfg.telegram_chat_id:
+        from ..notify.telegram import send_telegram_message
+
+        def confirm(signal, post, platforms, _tok=cfg.telegram_bot_token, _chat=cfg.telegram_chat_id):
+            send_telegram_message(_tok, _chat, f"✅ Posted to {', '.join(platforms)}:\n\n{post.full_text()}")
 
     return SocialPublisher(
         generator,
@@ -103,4 +126,5 @@ def build_publisher(cfg) -> Optional[SocialPublisher]:
         with_image=cfg.post_image,
         image_output_dir=cfg.image_output_dir,
         image_public_base=cfg.image_public_base,
+        confirm=confirm,
     )

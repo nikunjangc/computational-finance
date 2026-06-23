@@ -245,6 +245,30 @@ FB and IG can run live at the same time; both are gated by the same confidence
 threshold and dedup. Without a public image URL, IG posts are skipped (it can't
 do text-only) — Facebook still posts.
 
+### X / Twitter and LinkedIn (text)
+
+Text platforms are simpler — no image hosting, no app-review image dance:
+
+```env
+# X / Twitter — developer app with write access (OAuth 1.0a user context):
+X_API_KEY=...
+X_API_SECRET=...
+X_ACCESS_TOKEN=...
+X_ACCESS_SECRET=...
+# LinkedIn — token with w_member_social + author URN:
+LINKEDIN_ACCESS_TOKEN=...
+LINKEDIN_AUTHOR_URN=urn:li:person:XXXX
+```
+
+X posts are auto-trimmed to 280 chars; LinkedIn posts the full caption. Any
+combination of platforms can run live at once.
+
+### Telegram post confirmations
+
+If `TELEGRAM_BOT_TOKEN` / `TELEGRAM_CHAT_ID` are set, every time a post actually
+goes live you get a Telegram message listing **which platforms** it hit and the
+exact text — your audit trail. (Only fires on real posts, not dry-run.)
+
 > ⚠️ Auto-posting financial content carries platform-ToS and "is this advice?"
 > exposure. A disclaimer is appended to every post; consider `PUBLISH_DRY_RUN`
 > or a review step for anything sensitive.

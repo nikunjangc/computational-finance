@@ -62,6 +62,14 @@ class Config:
     ig_access_token: Optional[str] = None     # defaults to the FB page token
     image_output_dir: Optional[str] = None    # where cards are written (serve this dir)
     image_public_base: Optional[str] = None   # public HTTPS base URL for those cards
+    # X / Twitter (OAuth 1.0a user context, write access)
+    x_api_key: Optional[str] = None
+    x_api_secret: Optional[str] = None
+    x_access_token: Optional[str] = None
+    x_access_secret: Optional[str] = None
+    # LinkedIn (token with w_member_social + author URN)
+    linkedin_access_token: Optional[str] = None
+    linkedin_author_urn: Optional[str] = None
 
     # --- multi-instance coordination (primary + failover) ---
     instance_id: Optional[str] = None
@@ -111,4 +119,10 @@ class Config:
             ig_access_token=env("IG_ACCESS_TOKEN"),
             image_output_dir=env("IMAGE_OUTPUT_DIR"),
             image_public_base=env("IMAGE_PUBLIC_BASE_URL"),
+            x_api_key=env("X_API_KEY"),
+            x_api_secret=env("X_API_SECRET"),
+            x_access_token=env("X_ACCESS_TOKEN"),
+            x_access_secret=env("X_ACCESS_SECRET"),
+            linkedin_access_token=env("LINKEDIN_ACCESS_TOKEN"),
+            linkedin_author_urn=env("LINKEDIN_AUTHOR_URN"),
         )

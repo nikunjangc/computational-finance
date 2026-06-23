@@ -327,6 +327,59 @@ def test_social_publisher_gates_on_confidence():
     assert counter.count == 1
 
 
+def test_social_publisher_confirms_with_platforms():
+    seen = {}
+
+    def confirm(signal, post, platforms):
+        seen["platforms"] = platforms
+
+    sp = SocialPublisher(ContentGenerator(), [_CountingPublisher()], min_confidence=0.7,
+                         with_image=False, confirm=confirm)
+    assert sp.publish(_make_signal(confidence=0.9)) is True
+    assert seen["platforms"] == ["console"]
+
+
+def test_twitter_text_fits_280_and_posts():
+    from stock_tracker.publish.twitter import TwitterPublisher, tweet_text
+
+    long = Post("x" * 400, ["stocks", "ionq"], disclaimer="NFA")
+    assert len(tweet_text(long)) <= 280
+
+    captured = {}
+
+    def fake_post(url, headers=None, json=None):
+        captured["headers"] = headers
+        captured["json"] = json
+        return types.SimpleNamespace(status_code=201, text="{}")
+
+    pub = TwitterPublisher("k", "ks", "t", "ts", http_post=fake_post, _nonce="n", _ts=1700000000)
+    ok = pub.publish(_make_signal(), Post("hi there", ["stocks"]), None)
+    assert ok is True
+    assert captured["headers"]["Authorization"].startswith("OAuth ")
+    assert "oauth_signature=" in captured["headers"]["Authorization"]
+    assert captured["json"]["text"]
+
+
+def test_linkedin_ugc_payload():
+    from stock_tracker.publish.linkedin import LinkedInPublisher
+
+    captured = {}
+
+    def fake_post(url, headers=None, json=None):
+        captured["url"] = url
+        captured["headers"] = headers
+        captured["json"] = json
+        return types.SimpleNamespace(status_code=201, text="{}")
+
+    pub = LinkedInPublisher("urn:li:person:ABC", "TOKEN", http_post=fake_post)
+    ok = pub.publish(_make_signal(), Post("hello", ["stocks"]), None)
+    assert ok is True
+    assert captured["url"].endswith("/ugcPosts")
+    assert captured["headers"]["Authorization"] == "Bearer TOKEN"
+    assert captured["json"]["author"] == "urn:li:person:ABC"
+    assert "hello" in captured["json"]["specificContent"]["com.linkedin.ugc.ShareContent"]["shareCommentary"]["text"]
+
+
 if __name__ == "__main__":
     # Allow running without pytest installed.
     fns = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
