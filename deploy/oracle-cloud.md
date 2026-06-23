@@ -1,8 +1,14 @@
 # Deploying on an Oracle Cloud Free ARM VPS
 
-The Oracle Cloud **Always Free** tier gives you an Ampere A1 (ARM64) VM — up
-to 4 OCPU / 24 GB RAM at no cost — which is far more than this agent needs.
-This guide takes you from zero to an always-on tracker.
+The Oracle Cloud **Always Free** tier gives you an Ampere A1 (ARM64) VM — far
+more than this agent needs. This guide takes you from zero to an always-on
+tracker.
+
+> ⚠️ **Free-tier change (June 2026):** Oracle halved the Always Free Ampere A1
+> allocation from **4 OCPU / 24 GB** to **2 OCPU / 12 GB total** (across all A1
+> instances) on/around **June 15, 2026**. Instances over the new limit get shut
+> down or billed. Size your VM at **≤ 2 OCPU / ≤ 12 GB**. (The 2 AMD micro VMs
+> and 200 GB block storage are unchanged.)
 
 > The Docker image is multi-arch, so it builds natively on ARM64.
 > The agent only makes **outbound** connections (Telegram/WhatsApp, YouTube,
@@ -18,7 +24,7 @@ This guide takes you from zero to an always-on tracker.
 2. **Compute → Instances → Create Instance.**
    - **Image:** Canonical Ubuntu 24.04 (or 22.04).
    - **Shape:** *Ampere* → `VM.Standard.A1.Flex`. 1 OCPU / 6 GB RAM is plenty
-     (you can use up to 4 OCPU / 24 GB free).
+     (free ceiling is now 2 OCPU / 12 GB total — see the note above).
    - **SSH keys:** upload your public key (or let it generate one and save the
      private key).
 3. Create it and note the **public IP**.
@@ -107,14 +113,15 @@ journalctl -u stock-tracker -f
 
 ---
 
-## Staying inside the free tier (≤ 4 OCPU / ≤ 24 GB)
+## Staying inside the free tier (≤ 2 OCPU / ≤ 12 GB as of Jun 2026)
 
 There are **two independent limits** — use both:
 
 1. **VM shape = the billing guardrail.** When you create the `A1.Flex`
-   instance, set it to at most **4 OCPU / 24 GB**. Oracle will not let the VM
-   exceed its shape, so you cannot accidentally drift into paid territory. This
-   is the limit that actually protects your bill — Docker cannot.
+   instance, set it to at most **2 OCPU / 12 GB** (the post-June-2026 free
+   ceiling). Oracle will not let the VM exceed its shape, so you cannot
+   accidentally drift into paid territory. This is the limit that actually
+   protects your bill — Docker cannot.
 2. **Container cap = a safety net** (in `docker-compose.yml`, tunable via
    `.env`):
    ```env
@@ -125,7 +132,7 @@ There are **two independent limits** — use both:
    ```
    The agent normally uses **< 0.5 CPU / < 200 MB**, so the defaults leave huge
    headroom while still capping a runaway. To pin the container to the full
-   free-tier ceiling instead, set `CPU_LIMIT=4.0` and `MEM_LIMIT=24g` (never
+   free-tier ceiling instead, set `CPU_LIMIT=2.0` and `MEM_LIMIT=12g` (never
    set `MEM_LIMIT` above your VM's actual RAM).
 
    Verify the effective limits before starting:
@@ -154,8 +161,8 @@ docker compose run --rm tracker --demo
 ### Notes
 - **Keep it small:** one instance is the right size. Don't fan out into many
   pollers — respect YouTube / exchange rate limits and Terms of Service.
-- **Cost:** staying within the Always Free shape (≤4 OCPU / ≤24 GB ARM, ≤200 GB
-  block storage) means no charges. Oracle may reclaim *idle* Always-Free VMs;
-  a continuously-running agent like this keeps it active.
+- **Cost:** staying within the Always Free shape (≤2 OCPU / ≤12 GB ARM as of
+  Jun 2026, ≤200 GB block storage) means no charges. Oracle may reclaim *idle*
+  Always-Free VMs; a continuously-running agent like this keeps it active.
 - **Security:** keep the box patched (`sudo apt update && sudo apt upgrade`),
   use SSH keys only, and never commit your `.env`.

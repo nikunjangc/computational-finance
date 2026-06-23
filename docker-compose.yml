@@ -27,7 +27,7 @@ services:
     # Exceeding MEM_LIMIT => the container is OOM-killed (hard fail) and then
     # restarted by the policy above. CPU_LIMIT throttles (cgroups don't "fail"
     # a process for CPU). Tune via .env; never exceed your VM shape, and keep
-    # within the free tier (<= 4 OCPU / <= 24 GB).
+    # within the free tier (as of ~Jun 2026: <= 2 OCPU / <= 12 GB; was 4/24).
     deploy:
       resources:
         limits:
