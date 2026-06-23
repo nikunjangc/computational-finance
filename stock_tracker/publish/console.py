@@ -12,10 +12,12 @@ from .base import Publisher
 class ConsolePublisher(Publisher):
     name = "console"
 
-    def publish(self, signal: Signal, post: Post, image_path: Optional[str]) -> bool:
+    def publish(self, signal: Signal, post: Post, image_path: Optional[str], image_url: Optional[str] = None) -> bool:
         print("\n" + "#" * 60)
         print("[DRY-RUN] would post to social:")
         print(post.full_text())
         print(f"image: {image_path or '(none — text only)'}")
+        if image_url:
+            print(f"image_url: {image_url}")
         print("#" * 60, flush=True)
         return True

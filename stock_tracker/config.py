@@ -58,6 +58,10 @@ class Config:
     post_disclaimer: str = "Educational only — not financial advice. Do your own research."
     fb_page_id: Optional[str] = None
     fb_page_token: Optional[str] = None
+    ig_user_id: Optional[str] = None
+    ig_access_token: Optional[str] = None     # defaults to the FB page token
+    image_output_dir: Optional[str] = None    # where cards are written (serve this dir)
+    image_public_base: Optional[str] = None   # public HTTPS base URL for those cards
 
     # --- multi-instance coordination (primary + failover) ---
     instance_id: Optional[str] = None
@@ -103,4 +107,8 @@ class Config:
             post_disclaimer=env("POST_DISCLAIMER", "Educational only — not financial advice. Do your own research."),
             fb_page_id=env("FB_PAGE_ID"),
             fb_page_token=env("FB_PAGE_ACCESS_TOKEN"),
+            ig_user_id=env("IG_USER_ID"),
+            ig_access_token=env("IG_ACCESS_TOKEN"),
+            image_output_dir=env("IMAGE_OUTPUT_DIR"),
+            image_public_base=env("IMAGE_PUBLIC_BASE_URL"),
         )

@@ -13,5 +13,10 @@ class Publisher(abc.ABC):
     name = "publisher"
 
     @abc.abstractmethod
-    def publish(self, signal: Signal, post: Post, image_path: Optional[str]) -> bool:
-        """Publish the post. Return True on success."""
+    def publish(self, signal: Signal, post: Post, image_path: Optional[str], image_url: Optional[str] = None) -> bool:
+        """Publish the post. Return True on success.
+
+        image_path: local file (used by Facebook multipart upload).
+        image_url:  public HTTPS URL of the same image (required by Instagram,
+                    which fetches media rather than accepting an upload).
+        """

@@ -286,9 +286,36 @@ class _CountingPublisher(ConsolePublisher):
     def __init__(self):
         self.count = 0
 
-    def publish(self, signal, post, image_path):
+    def publish(self, signal, post, image_path, image_url=None):
         self.count += 1
         return True
+
+
+def test_instagram_requires_image_url():
+    from stock_tracker.publish.instagram import InstagramPublisher
+
+    pub = InstagramPublisher("IGID", "TOKEN", http_post=lambda *a, **k: None)
+    # No public image URL -> IG can't post -> False (and no HTTP call made).
+    assert pub.publish(_make_signal(), Post("hi"), image_path="/tmp/x.png", image_url=None) is False
+
+
+def test_instagram_two_step_publish():
+    from stock_tracker.publish.instagram import InstagramPublisher
+
+    calls = []
+
+    def fake_post(url, data=None):
+        calls.append(url)
+        if url.endswith("/media"):
+            return types.SimpleNamespace(status_code=200, text="{}", json=lambda: {"id": "creation123"})
+        return types.SimpleNamespace(status_code=200, text="{}", json=lambda: {"id": "media999"})
+
+    pub = InstagramPublisher("IGID", "TOKEN", http_post=fake_post)
+    ok = pub.publish(_make_signal(), Post("hi", ["stocks"]), image_path=None,
+                     image_url="https://example.com/card.png")
+    assert ok is True
+    assert calls[0].endswith("/IGID/media")
+    assert calls[1].endswith("/IGID/media_publish")
 
 
 def test_social_publisher_gates_on_confidence():

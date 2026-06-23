@@ -223,8 +223,27 @@ FB_PAGE_ACCESS_TOKEN=...        # long-lived Page token with pages_manage_posts
 - **Gated** by `PUBLISH_MIN_CONFIDENCE` so only high-confidence events post, and
   by the same dedup/leader logic as alerts (no double-posting across instances).
 - **Pluggable:** add platforms by subclassing
-  [`publish.base.Publisher`](stock_tracker/publish/base.py) — Instagram, X, etc.
+  [`publish.base.Publisher`](stock_tracker/publish/base.py) — X, LinkedIn, etc.
   follow the same shape. (TikTok/Reels need video, a separate build.)
+
+### Instagram
+
+Instagram uses the same Graph API (Business/Creator account linked to your Page,
+app scope `instagram_content_publish`). One key difference: **IG fetches the
+image by URL** rather than accepting an upload, so the card must be publicly
+hosted. Write cards to a served directory and tell the agent its public URL:
+
+```env
+IG_USER_ID=...                         # IG business account id
+IG_ACCESS_TOKEN=...                    # or leave blank to reuse FB_PAGE_ACCESS_TOKEN
+IMAGE_OUTPUT_DIR=/var/www/cards        # where cards are written
+IMAGE_PUBLIC_BASE_URL=https://you.com/cards   # how that dir is reachable
+```
+
+Publishing is the standard two-step flow (create media container → publish).
+FB and IG can run live at the same time; both are gated by the same confidence
+threshold and dedup. Without a public image URL, IG posts are skipped (it can't
+do text-only) — Facebook still posts.
 
 > ⚠️ Auto-posting financial content carries platform-ToS and "is this advice?"
 > exposure. A disclaimer is appended to every post; consider `PUBLISH_DRY_RUN`

@@ -37,7 +37,7 @@ class FacebookPagePublisher(Publisher):
 
         return requests.post(url, data=data, files=files, timeout=30)
 
-    def publish(self, signal: Signal, post: Post, image_path: Optional[str]) -> bool:
+    def publish(self, signal: Signal, post: Post, image_path: Optional[str], image_url: Optional[str] = None) -> bool:
         base = f"https://graph.facebook.com/{self.api_version}/{self.page_id}"
         caption = post.full_text()
         try:
