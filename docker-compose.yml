@@ -14,11 +14,29 @@ services:
     image: stock-tracker:latest
     container_name: stock-tracker
     env_file:
-      - .env
+      # Optional: a missing .env won't block `docker compose run --rm tracker --demo`.
+      - path: .env
+        required: false
     restart: unless-stopped
     # Override the command for other modes, e.g.:
     #   docker compose run --rm tracker --demo
     command: ["--live"]
+    # --- Resource cap (safety net) -------------------------------------
+    # Hard ceiling for the CONTAINER. Defaults are far above what the agent
+    # needs (<0.5 CPU / <200 MB) but well under Oracle's free tier.
+    # Exceeding MEM_LIMIT => the container is OOM-killed (hard fail) and then
+    # restarted by the policy above. CPU_LIMIT throttles (cgroups don't "fail"
+    # a process for CPU). Tune via .env; never exceed your VM shape, and keep
+    # within the free tier (<= 4 OCPU / <= 24 GB).
+    deploy:
+      resources:
+        limits:
+          cpus: "${CPU_LIMIT:-1.0}"
+          memory: "${MEM_LIMIT:-1g}"
+        reservations:
+          memory: "${MEM_RESERVE:-128m}"
+    # Surface OOM kills clearly instead of silently restarting.
+    oom_kill_disable: false
     healthcheck:
       test: ["CMD", "python", "-c", "import stock_tracker"]
       interval: 1m

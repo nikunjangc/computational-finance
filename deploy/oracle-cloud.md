@@ -107,6 +107,33 @@ journalctl -u stock-tracker -f
 
 ---
 
+## Staying inside the free tier (≤ 4 OCPU / ≤ 24 GB)
+
+There are **two independent limits** — use both:
+
+1. **VM shape = the billing guardrail.** When you create the `A1.Flex`
+   instance, set it to at most **4 OCPU / 24 GB**. Oracle will not let the VM
+   exceed its shape, so you cannot accidentally drift into paid territory. This
+   is the limit that actually protects your bill — Docker cannot.
+2. **Container cap = a safety net** (in `docker-compose.yml`, tunable via
+   `.env`):
+   ```env
+   CPU_LIMIT=1.0     # throttle: cgroups cap CPU share (no "fail" on CPU)
+   MEM_LIMIT=1g      # hard fail: container is OOM-killed if it exceeds this,
+                     #            then auto-restarted by restart: unless-stopped
+   MEM_RESERVE=128m
+   ```
+   The agent normally uses **< 0.5 CPU / < 200 MB**, so the defaults leave huge
+   headroom while still capping a runaway. To pin the container to the full
+   free-tier ceiling instead, set `CPU_LIMIT=4.0` and `MEM_LIMIT=24g` (never
+   set `MEM_LIMIT` above your VM's actual RAM).
+
+   Verify the effective limits before starting:
+   ```bash
+   docker compose config | grep -iE "cpus|memory"
+   docker stats stock-tracker          # live CPU/MEM usage once running
+   ```
+
 ## Day-2 operations
 
 ```bash
