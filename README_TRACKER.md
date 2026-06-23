@@ -68,6 +68,12 @@ python run_tracker.py --live
 The image installs the optional live connectors (`youtube-transcript-api`,
 `websockets`) so live mode is fully functional in the container.
 
+**Hosting it 24/7:** a long-running worker needs a real host — *not* GitHub
+Actions (job-only, ~6 h cap) or Vercel (serverless, short-lived). Use an
+always-on VPS or worker platform. A step-by-step guide for the **Oracle Cloud
+free ARM tier** is in [`deploy/oracle-cloud.md`](deploy/oracle-cloud.md), with a
+ready-to-use systemd unit in [`deploy/stock-tracker.service`](deploy/stock-tracker.service).
+
 ---
 
 ## How it works
