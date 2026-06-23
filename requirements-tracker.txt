@@ -6,6 +6,7 @@ requests>=2.28
 youtube-transcript-api>=0.6     # YouTube live-caption / transcript source
 websockets>=11.0                # generic "open socket" push feed source
 redis>=5.0                      # ONLY for automatic multi-instance failover (REDIS_URL)
+anthropic>=0.40                 # ONLY for the optional budget-capped LLM classifier (LLM_ENABLED)
 
 # Notes:
 #  * Telegram & WhatsApp notifiers use `requests` only (no SDK needed).

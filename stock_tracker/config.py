@@ -43,6 +43,13 @@ class Config:
     min_confidence: float = 0.45
     poll_seconds: int = 20
 
+    # --- optional LLM classifier (budget-capped) ---
+    anthropic_api_key: Optional[str] = None
+    llm_enabled: bool = False
+    llm_model: str = "claude-haiku-4-5"
+    llm_monthly_budget: float = 1.0          # USD; falls back to free mode when hit
+    llm_state_path: str = ".stock_tracker_llm_spend.json"
+
     # --- multi-instance coordination (primary + failover) ---
     instance_id: Optional[str] = None
     tracker_role: str = "primary"          # primary | standby (role-based mode)
@@ -75,4 +82,9 @@ class Config:
             redis_url=env("REDIS_URL"),
             lease_ttl=int(env("LEASE_TTL", "30")),
             dedup_window=int(env("DEDUP_WINDOW", "900")),
+            anthropic_api_key=env("ANTHROPIC_API_KEY"),
+            llm_enabled=env("LLM_ENABLED", "false").lower() in ("1", "true", "yes"),
+            llm_model=env("LLM_MODEL", "claude-haiku-4-5"),
+            llm_monthly_budget=float(env("LLM_MONTHLY_BUDGET_USD", "1.0")),
+            llm_state_path=env("LLM_STATE_PATH", ".stock_tracker_llm_spend.json"),
         )

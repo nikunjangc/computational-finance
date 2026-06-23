@@ -58,7 +58,11 @@ async def cmd_demo(verbose: bool) -> None:
 
 async def cmd_live() -> None:
     cfg = Config.from_env()
-    engine = SignalEngine(min_confidence=cfg.min_confidence)
+    from .knowledge_base import KnowledgeBase
+    from .nlp.llm_classifier import build_classifier
+
+    kb = KnowledgeBase.load()
+    engine = SignalEngine(kb=kb, min_confidence=cfg.min_confidence, llm=build_classifier(cfg, kb))
     dispatcher = Dispatcher(build_notifiers(cfg, include_console=True))
     sources = build_default_sources(cfg)
     coordinator = build_coordinator(cfg)

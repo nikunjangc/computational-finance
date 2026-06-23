@@ -127,3 +127,6 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# stock_tracker LLM spend state
+.stock_tracker_llm_spend.json

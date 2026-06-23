@@ -175,6 +175,34 @@ whatever is configured, always printing to the console as a fallback.
 
 ---
 
+## Optional: LLM classifier (≈ $1/month, budget-capped)
+
+The free bag-of-words engine always runs and acts as the **pre-filter**. Turn on
+the LLM classifier to have **Claude Haiku** refine the snippets it flags —
+catching paraphrases and sarcasm the keyword matcher misses (e.g. *"the Fed will
+ease"* with no literal "rate cut").
+
+```env
+LLM_ENABLED=true
+ANTHROPIC_API_KEY=sk-ant-...
+LLM_MODEL=claude-haiku-4-5
+LLM_MONTHLY_BUDGET_USD=1.0     # hard cap — falls back to free mode when reached
+```
+
+How it stays around a dollar a month:
+- It **only** calls the API on snippets the free matcher already flagged — most
+  text never reaches Claude.
+- The fixed sector guide is sent with **prompt caching**, so repeat calls bill
+  the prefix at ~0.1×.
+- A persistent [`CostTracker`](stock_tracker/nlp/llm_classifier.py) enforces the
+  monthly budget; once spent, `classify()` returns `None` and the engine
+  **transparently falls back** to the free matcher until the month rolls over.
+- One classification on Haiku ≈ **$0.001–0.0025**, so $1 buys hundreds of LLM
+  refinements per month.
+
+If `anthropic` isn't installed, no key is set, or `LLM_ENABLED=false`, the
+classifier disables itself and everything runs free.
+
 ## Extending it
 
 - **Add a sector / stock** → edit `sectors.yaml`. No code changes.
