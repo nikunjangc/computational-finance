@@ -74,6 +74,21 @@ always-on VPS or worker platform. A step-by-step guide for the **Oracle Cloud
 free ARM tier** is in [`deploy/oracle-cloud.md`](deploy/oracle-cloud.md), with a
 ready-to-use systemd unit in [`deploy/stock-tracker.service`](deploy/stock-tracker.service).
 
+### High availability (primary + failover, no double alerts)
+
+Run a second instance (e.g. a free GCP `e2-micro`) as a hot standby. The
+[`coordination`](stock_tracker/coordination.py) layer makes sure exactly one
+host ever sends an alert:
+
+- **Role-based (default, no deps):** `TRACKER_ROLE=primary` on the main host,
+  `TRACKER_ROLE=standby` on the backup. The standby runs the full pipeline but
+  stays silent; promote it if the primary dies.
+- **Redis (automatic):** set the same `REDIS_URL` on both hosts → a leader lease
+  auto-fails-over within `LEASE_TTL`s and a per-event dedup key (content
+  `fingerprint`) guarantees one alert per event, even active/active.
+
+Full walkthrough: [`deploy/gcp-failover.md`](deploy/gcp-failover.md).
+
 ---
 
 ## How it works

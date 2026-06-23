@@ -21,6 +21,7 @@ import signal
 
 from .agent import Agent, build_default_sources
 from .config import Config
+from .coordination import build_coordinator
 from .knowledge_base import KnowledgeBase
 from .notify.base import format_alert
 from .notify.dispatcher import Dispatcher, build_notifiers
@@ -60,7 +61,11 @@ async def cmd_live() -> None:
     engine = SignalEngine(min_confidence=cfg.min_confidence)
     dispatcher = Dispatcher(build_notifiers(cfg, include_console=True))
     sources = build_default_sources(cfg)
-    agent = Agent(sources=sources, engine=engine, dispatcher=dispatcher)
+    coordinator = build_coordinator(cfg)
+    logging.getLogger("stock_tracker").info(
+        "instance=%s role=%s (redis=%s)", coordinator.instance_id, coordinator.role(), bool(cfg.redis_url)
+    )
+    agent = Agent(sources=sources, engine=engine, dispatcher=dispatcher, coordinator=coordinator)
 
     # Graceful shutdown on SIGTERM/SIGINT (e.g. `docker stop`).
     loop = asyncio.get_running_loop()

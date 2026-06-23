@@ -15,6 +15,7 @@ import time
 from typing import List, Optional
 
 from .config import Config
+from .coordination import Coordinator
 from .knowledge_base import KnowledgeBase
 from .models import Signal, Utterance
 from .notify.dispatcher import Dispatcher, build_notifiers
@@ -30,15 +31,18 @@ class Agent:
         sources: List[Source],
         engine: Optional[SignalEngine] = None,
         dispatcher: Optional[Dispatcher] = None,
+        coordinator: Optional[Coordinator] = None,
         dedup_seconds: int = 600,
     ):
         self.sources = sources
         self.engine = engine or SignalEngine()
         self.dispatcher = dispatcher or Dispatcher(build_notifiers(Config.from_env()))
+        self.coordinator = coordinator
         self.dedup_seconds = dedup_seconds
         self._recent: dict[str, float] = {}
         self.processed = 0
         self.alerts = 0
+        self.suppressed = 0
 
     # ------------------------------------------------------------------
     def _is_duplicate(self, signal: Signal) -> bool:
@@ -56,7 +60,13 @@ class Agent:
         fired: List[Signal] = []
         for signal in self.engine.process(utterance):
             if self._is_duplicate(signal):
-                log.debug("suppressed duplicate: %s", signal.sector)
+                log.debug("suppressed local duplicate: %s", signal.sector)
+                continue
+            # Cross-instance guard: only the active/leader instance (and only
+            # once per event) actually sends. Standby instances stay silent.
+            if self.coordinator is not None and not self.coordinator.claim(signal):
+                self.suppressed += 1
+                log.debug("suppressed by coordinator (role=%s): %s", self.coordinator.role(), signal.sector)
                 continue
             self.dispatcher.dispatch(signal)
             self.alerts += 1

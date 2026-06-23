@@ -71,6 +71,19 @@ class Signal:
     def symbols(self) -> List[str]:
         return [t.symbol for t in self.tickers]
 
+    def fingerprint(self) -> str:
+        """Stable id for this event, identical across instances.
+
+        Two agents (primary + failover) that see the same source text will
+        compute the same fingerprint, so a shared dedup store can guarantee a
+        single alert per event regardless of which instance sends it.
+        """
+        import hashlib
+
+        norm = " ".join((self.utterance.text or "").lower().split())
+        raw = f"{self.sector_key}|{self.direction.value}|{self.utterance.speaker}|{norm}"
+        return hashlib.sha1(raw.encode("utf-8")).hexdigest()[:16]
+
     def to_dict(self) -> Dict:
         return {
             "timestamp": self.utterance.timestamp.isoformat(),

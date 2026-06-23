@@ -43,6 +43,13 @@ class Config:
     min_confidence: float = 0.45
     poll_seconds: int = 20
 
+    # --- multi-instance coordination (primary + failover) ---
+    instance_id: Optional[str] = None
+    tracker_role: str = "primary"          # primary | standby (role-based mode)
+    redis_url: Optional[str] = None        # set => automatic leader+dedup mode
+    lease_ttl: int = 30                    # seconds; standby promotes within this
+    dedup_window: int = 900                # seconds an event stays de-duped
+
     @classmethod
     def from_env(cls) -> "Config":
         env = os.environ.get
@@ -63,4 +70,9 @@ class Config:
             websocket_urls=_split(env("WEBSOCKET_URLS")),
             min_confidence=float(env("MIN_CONFIDENCE", "0.45")),
             poll_seconds=int(env("POLL_SECONDS", "20")),
+            instance_id=env("INSTANCE_ID"),
+            tracker_role=env("TRACKER_ROLE", "primary"),
+            redis_url=env("REDIS_URL"),
+            lease_ttl=int(env("LEASE_TTL", "30")),
+            dedup_window=int(env("DEDUP_WINDOW", "900")),
         )
