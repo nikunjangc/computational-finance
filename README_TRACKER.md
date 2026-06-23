@@ -249,6 +249,9 @@ do text-only) — Facebook still posts.
 > exposure. A disclaimer is appended to every post; consider `PUBLISH_DRY_RUN`
 > or a review step for anything sensitive.
 
+Full step-by-step (Meta app, Page token, Instagram linking, serving the card
+image on your VM): [`deploy/meta-setup.md`](deploy/meta-setup.md).
+
 ## Extending it
 
 - **Add a sector / stock** → edit `sectors.yaml`. No code changes.
