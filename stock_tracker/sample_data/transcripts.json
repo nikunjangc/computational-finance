@@ -1,0 +1,44 @@
+[
+  {
+    "speaker": "Donald Trump",
+    "source": "youtube:CNBC",
+    "url": "https://www.youtube.com/watch?v=DEMO_quantum",
+    "text": "We are going to lead the world in quantum computing and quantum chips. America will invest big in this technology, it is going to go up and be a huge winner for our country."
+  },
+  {
+    "speaker": "Donald Trump",
+    "source": "youtube:CNBC",
+    "url": "https://www.youtube.com/watch?v=DEMO_crypto",
+    "text": "On cryptography and crypto, Bitcoin is the future. We will build a strategic reserve of digital assets and support the blockchain industry."
+  },
+  {
+    "speaker": "Jerome Powell",
+    "source": "youtube:Yahoo Finance",
+    "url": "https://www.youtube.com/watch?v=DEMO_fomc",
+    "text": "The Committee decided to cut the federal funds rate by 25 basis points. Inflation has eased and the monetary policy stance is now slightly less restrictive."
+  },
+  {
+    "speaker": "Jerome Powell",
+    "source": "youtube:Yahoo Finance",
+    "url": "https://www.youtube.com/watch?v=DEMO_hawkish",
+    "text": "If inflation does not come down we are prepared to hike the interest rate further and keep policy tight for longer. A rate hike remains on the table."
+  },
+  {
+    "speaker": "Anchor",
+    "source": "youtube:CNBC",
+    "url": "https://www.youtube.com/watch?v=DEMO_ai",
+    "text": "Demand for AI data center GPUs and accelerators continues to surge, with the latest large language model build-out boosting orders."
+  },
+  {
+    "speaker": "Policy maker",
+    "source": "youtube:CNBC",
+    "url": "https://www.youtube.com/watch?v=DEMO_tariff",
+    "text": "We will impose new tariffs on imports and escalate the trade war. These import duties will pressure margins for industrial exporters."
+  },
+  {
+    "speaker": "Anchor",
+    "source": "youtube:CNBC",
+    "url": "https://www.youtube.com/watch?v=DEMO_neutral",
+    "text": "Markets were mixed today as investors weighed corporate earnings and looked ahead to the jobs report on Friday."
+  }
+]

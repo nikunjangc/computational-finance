@@ -1,0 +1,49 @@
+# Run the live agentic tracker continuously.
+#
+#   cp .env.example .env   # fill in your tokens / channels
+#   docker compose up -d --build
+#   docker compose logs -f tracker
+#
+# The agent is long-running: scheduled sources (FOMC calendar, crypto index)
+# and live sources (YouTube captions, websocket feed) run forever inside it,
+# so `restart: unless-stopped` keeps it alive across crashes / reboots.
+
+services:
+  tracker:
+    build: .
+    image: stock-tracker:latest
+    container_name: stock-tracker
+    env_file:
+      # Optional: a missing .env won't block `docker compose run --rm tracker --demo`.
+      - path: .env
+        required: false
+    restart: unless-stopped
+    # Override the command for other modes, e.g.:
+    #   docker compose run --rm tracker --demo
+    command: ["--live"]
+    # --- Resource cap (safety net) -------------------------------------
+    # Hard ceiling for the CONTAINER. Defaults are far above what the agent
+    # needs (<0.5 CPU / <200 MB) but well under Oracle's free tier.
+    # Exceeding MEM_LIMIT => the container is OOM-killed (hard fail) and then
+    # restarted by the policy above. CPU_LIMIT throttles (cgroups don't "fail"
+    # a process for CPU). Tune via .env; never exceed your VM shape, and keep
+    # within the free tier (as of ~Jun 2026: <= 2 OCPU / <= 12 GB; was 4/24).
+    deploy:
+      resources:
+        limits:
+          cpus: "${CPU_LIMIT:-1.0}"
+          memory: "${MEM_LIMIT:-1g}"
+        reservations:
+          memory: "${MEM_RESERVE:-128m}"
+    # Surface OOM kills clearly instead of silently restarting.
+    oom_kill_disable: false
+    healthcheck:
+      test: ["CMD", "python", "-c", "import stock_tracker"]
+      interval: 1m
+      timeout: 10s
+      retries: 3
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

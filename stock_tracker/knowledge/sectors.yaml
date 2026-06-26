@@ -1,0 +1,243 @@
+# =====================================================================
+# Knowledge base: the "bag of words" that turns spoken themes into stocks.
+#
+# Each sector has:
+#   display  : human readable name shown in alerts
+#   keywords : trigger phrases (case-insensitive, whole-word/phrase match).
+#              Multi-word phrases are matched as phrases.
+#   tickers  : the stocks that tend to move when the theme is in the news.
+#   bias     : optional default direction when no bullish/bearish cue is found
+#              (bullish | bearish | neutral). Defaults to neutral.
+#
+# This file is meant to be edited freely – add sectors, keywords and tickers
+# as you learn which names react to which themes.
+# =====================================================================
+
+sectors:
+
+  quantum_computing:
+    display: "Quantum Computing"
+    bias: bullish
+    keywords:
+      - quantum
+      - qubit
+      - quantum computing
+      - quantum supremacy
+      - quantum advantage
+      - quantum chip
+    tickers:
+      - {symbol: IONQ, name: "IonQ"}
+      - {symbol: RGTI, name: "Rigetti Computing"}
+      - {symbol: QBTS, name: "D-Wave Quantum"}
+      - {symbol: QUBT, name: "Quantum Computing Inc"}
+      - {symbol: IBM,  name: "IBM"}
+      - {symbol: GOOGL, name: "Alphabet (Google Quantum AI)"}
+
+  cryptography_post_quantum:
+    display: "Cryptography / Post-Quantum Security"
+    bias: bullish
+    keywords:
+      - cryptography
+      - post-quantum
+      - post quantum
+      - encryption
+      - quantum-safe
+      - quantum safe
+      - cybersecurity
+      - zero trust
+    tickers:
+      - {symbol: ARQQ, name: "Arqit Quantum"}
+      - {symbol: PANW, name: "Palo Alto Networks"}
+      - {symbol: CRWD, name: "CrowdStrike"}
+      - {symbol: ZS,   name: "Zscaler"}
+
+  crypto_digital_assets:
+    display: "Crypto / Digital Assets"
+    bias: neutral
+    keywords:
+      - crypto
+      - cryptocurrency
+      - bitcoin
+      - btc
+      - ethereum
+      - eth
+      - stablecoin
+      - digital asset
+      - blockchain
+      - strategic reserve
+    tickers:
+      - {symbol: COIN, name: "Coinbase"}
+      - {symbol: MSTR, name: "MicroStrategy"}
+      - {symbol: MARA, name: "Marathon Digital"}
+      - {symbol: RIOT, name: "Riot Platforms"}
+      - {symbol: HOOD, name: "Robinhood"}
+
+  artificial_intelligence:
+    display: "Artificial Intelligence / Semiconductors"
+    bias: bullish
+    keywords:
+      - artificial intelligence
+      - "a.i."
+      - machine learning
+      - data center
+      - gpu
+      - accelerator
+      - large language model
+      - chips act
+    tickers:
+      - {symbol: NVDA, name: "NVIDIA"}
+      - {symbol: AMD,  name: "Advanced Micro Devices"}
+      - {symbol: AVGO, name: "Broadcom"}
+      - {symbol: SMCI, name: "Super Micro Computer"}
+      - {symbol: TSM,  name: "Taiwan Semiconductor"}
+
+  interest_rates_fed:
+    display: "Interest Rates / Fed Policy"
+    bias: neutral
+    keywords:
+      - rate cut
+      - rate hike
+      - interest rate
+      - federal funds rate
+      - fomc
+      - basis points
+      - monetary policy
+      - quantitative tightening
+      - quantitative easing
+      - dovish
+      - hawkish
+      - inflation
+    tickers:
+      - {symbol: TLT, name: "20+ Year Treasury Bond ETF"}
+      - {symbol: XLF, name: "Financial Select Sector ETF"}
+      - {symbol: JPM, name: "JPMorgan Chase"}
+      - {symbol: KRE, name: "Regional Banking ETF"}
+      - {symbol: GLD, name: "Gold ETF"}
+
+  energy_oil:
+    display: "Energy / Oil & Gas"
+    bias: neutral
+    keywords:
+      - oil
+      - crude
+      - opec
+      - drilling
+      - "drill baby drill"
+      - natural gas
+      - lng
+      - energy independence
+    tickers:
+      - {symbol: XOM, name: "Exxon Mobil"}
+      - {symbol: CVX, name: "Chevron"}
+      - {symbol: OXY, name: "Occidental Petroleum"}
+      - {symbol: XLE, name: "Energy Select Sector ETF"}
+
+  defense:
+    display: "Defense / Aerospace"
+    bias: bullish
+    keywords:
+      - defense
+      - defence
+      - military
+      - missile
+      - drone
+      - golden dome
+      - rearmament
+      - nato
+    tickers:
+      - {symbol: LMT, name: "Lockheed Martin"}
+      - {symbol: RTX, name: "RTX Corporation"}
+      - {symbol: NOC, name: "Northrop Grumman"}
+      - {symbol: PLTR, name: "Palantir"}
+
+  tariffs_trade:
+    display: "Tariffs / Trade Policy"
+    bias: bearish
+    keywords:
+      - tariff
+      - tariffs
+      - trade war
+      - import duty
+      - sanctions
+      - reshoring
+      - trade deal
+    tickers:
+      - {symbol: CAT, name: "Caterpillar"}
+      - {symbol: DE,  name: "Deere & Co"}
+      - {symbol: FXI, name: "China Large-Cap ETF"}
+      - {symbol: WMT, name: "Walmart"}
+
+# ---------------------------------------------------------------------
+# Global sentiment lexicons used to infer bullish / bearish direction
+# from the words surrounding a matched keyword.
+# ---------------------------------------------------------------------
+sentiment:
+  bullish:
+    - up
+    - rise
+    - rises
+    - rising
+    - surge
+    - soar
+    - rally
+    - boom
+    - boost
+    - support
+    - invest
+    - investing
+    - investment
+    - grow
+    - growth
+    - expand
+    - cut          # "rate cut" is bullish for risk assets
+    - cuts
+    - stimulus
+    - bullish
+    - strong
+    - record
+    - back         # "get behind / back"
+    - winner
+    - winners
+    - "go up"
+    - skyrocket
+    - moon
+  bearish:
+    - down
+    - fall
+    - falls
+    - falling
+    - drop
+    - plunge
+    - crash
+    - slump
+    - weak
+    - weakness
+    - hike          # "rate hike" pressures risk assets
+    - hikes
+    - tighten
+    - tightening
+    - ban
+    - banned
+    - restrict
+    - restriction
+    - sanction
+    - tax
+    - bearish
+    - sell
+    - selloff
+    - recession
+    - slowdown
+    - loser
+    - losers
+
+# Negation words that flip the inferred direction within a short window.
+negations:
+  - not
+  - "no"
+  - never
+  - "won't"
+  - "wont"
+  - "doesn't"
+  - "doesnt"
+  - avoid
+  - against

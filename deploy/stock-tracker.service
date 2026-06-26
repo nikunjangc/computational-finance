@@ -1,0 +1,27 @@
+# systemd unit to run the tracker via docker compose on boot.
+#
+#   sudo cp deploy/stock-tracker.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now stock-tracker
+#
+# Adjust User and WorkingDirectory to match where you cloned the repo.
+
+[Unit]
+Description=Live agentic market-event tracker (docker compose)
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/computational-finance
+# Build once on start, then run in the foreground so systemd supervises it.
+ExecStartPre=/usr/bin/docker compose build
+ExecStart=/usr/bin/docker compose up
+ExecStop=/usr/bin/docker compose down
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
