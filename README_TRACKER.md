@@ -261,7 +261,8 @@ LINKEDIN_AUTHOR_URN=urn:li:person:XXXX
 ```
 
 X posts are auto-trimmed to 280 chars; LinkedIn posts the full caption. Any
-combination of platforms can run live at once.
+combination of platforms can run live at once. Credential setup:
+[`deploy/social-x-linkedin-setup.md`](deploy/social-x-linkedin-setup.md).
 
 ### Telegram post confirmations
 
